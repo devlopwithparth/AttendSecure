@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sign in — AttendSecure</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="auth-shell">
+    <div class="auth-card">
+      <div class="auth-eyebrow">Two-factor · OTP verified</div>
+      <h1>Sign in</h1>
+      <p class="sub">Password + one-time code, every login is logged for your security.</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-stack">
+            {% for category, message in messages %}
+              <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('auth.login') }}">
+        <label for="email">Email</label>
+        <input type="email" id="email" name="email" required autofocus>
+
+        <label for="password">Password</label>
+        <input type="password" id="password" name="password" required>
+
+        <button type="submit" class="btn btn-primary">Continue</button>
+      </form>
+
+      <div class="form-footer">
+        New here?
+        <a href="{{ url_for('auth.signup', role='student') }}">Student sign up</a> ·
+        <a href="{{ url_for('auth.signup', role='faculty') }}">Faculty sign up</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

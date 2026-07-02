@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}My Marks — AttendSecure{% endblock %}
+{% block content %}
+  <h1>My marks</h1>
+  <p class="lede">Uploaded directly by your faculty. Only visible to you.</p>
+
+  <div class="card">
+    {% if entries %}
+      <table>
+        <thead><tr><th>Subject</th><th>Exam</th><th>Score</th><th>Uploaded</th></tr></thead>
+        <tbody>
+          {% for e in entries %}
+            <tr>
+              <td>{{ e.subject }}</td>
+              <td>{{ e.exam_type }}</td>
+              <td>{{ e.marks_obtained }}/{{ e.max_marks }}</td>
+              <td>{{ e.uploaded_at.strftime('%d %b %Y') }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div style="margin-top:16px;">
+        <a class="btn btn-secondary" href="{{ url_for('student.export_marks_excel') }}">Export Excel</a>
+      </div>
+    {% else %}
+      <div class="empty-state">No marks uploaded yet.</div>
+    {% endif %}
+  </div>
+{% endblock %}

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}AttendSecure{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="app-shell">
+    <div class="topbar">
+      <div class="brand"><span class="dot"></span> AttendSecure</div>
+      <nav>
+        {% if session.get('role') == 'faculty' %}
+          <a href="{{ url_for('faculty.dashboard') }}" class="{{ 'active' if request.endpoint == 'faculty.dashboard' }}">Sessions</a>
+          <a href="{{ url_for('faculty.marks') }}" class="{{ 'active' if request.endpoint == 'faculty.marks' }}">Marks</a>
+        {% elif session.get('role') == 'student' %}
+          <a href="{{ url_for('student.dashboard') }}" class="{{ 'active' if request.endpoint == 'student.dashboard' }}">Home</a>
+          <a href="{{ url_for('student.scan') }}" class="{{ 'active' if request.endpoint == 'student.scan' }}">Scan QR</a>
+          <a href="{{ url_for('student.attendance') }}" class="{{ 'active' if request.endpoint == 'student.attendance' }}">Attendance</a>
+          <a href="{{ url_for('student.marks') }}" class="{{ 'active' if request.endpoint == 'student.marks' }}">Marks</a>
+        {% endif %}
+        <a href="{{ url_for('auth.logout') }}">Logout</a>
+      </nav>
+      <span class="user-tag">{{ session.get('name', '') }}</span>
+    </div>
+
+    <div class="page">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-stack">
+            {% for category, message in messages %}
+              <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</body>
+</html>

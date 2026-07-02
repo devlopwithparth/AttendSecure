@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+{% block title %}Dashboard — AttendSecure{% endblock %}
+{% block content %}
+
+  <div class="welcome-row">
+    <h1>👋 Welcome back, {{ name }}</h1>
+    <span class="today-tag" id="today-tag"></span>
+  </div>
+
+  <!-- ---------- Statistics cards ---------- -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="stat-icon">👨‍🎓</div>
+      <div class="stat-num">{{ stats.total_students }}</div>
+      <div class="stat-label">Total Students</div>
+    </div>
+    <div class="stat-card accent-secondary">
+      <div class="stat-icon">📅</div>
+      <div class="stat-num">{{ stats.sessions_today }}</div>
+      <div class="stat-label">Today's Sessions</div>
+    </div>
+    <div class="stat-card accent-success">
+      <div class="stat-icon">✅</div>
+      <div class="stat-num">{{ stats.present_today }}</div>
+      <div class="stat-label">Present Today</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-icon">📊</div>
+      <div class="stat-num">{{ stats.attendance_percentage }}%</div>
+      <div class="stat-label">Attendance Rate</div>
+    </div>
+    <div class="stat-card accent-violet">
+      <div class="stat-icon">🛡</div>
+      <div class="stat-num">{{ stats.verification_rate }}%</div>
+      <div class="stat-label">Verification Rate</div>
+    </div>
+  </div>
+
+  <!-- ---------- Today's live session ---------- -->
+  {% if live_session %}
+    <div class="card live-banner">
+      <div class="live-meta">
+        <span class="pulse-dot"></span>
+        <div>
+          <div style="font-weight:600;">{{ live_session.subject }} <span class="pill pill-live" style="margin-left:6px;">LIVE</span></div>
+          <div style="color:var(--text-dim); font-size:13px; margin-top:2px;">
+            {{ live_session.class_section }} · Geofence {{ live_session.radius_meters|int }}m · started {{ live_session.created_at.strftime('%H:%M') }}
+          </div>
+        </div>
+      </div>
+      <a class="btn btn-primary" style="width:auto; margin-top:0;" href="{{ url_for('faculty.session_view', session_id=live_session.id) }}">Open live QR →</a>
+    </div>
+  {% endif %}
+
+  <!-- ---------- Quick actions ---------- -->
+  <div class="card">
+    <h2>⚡ Quick Actions</h2>
+    <div class="quick-actions">
+      <a href="#start-session-form" class="quick-action"><span class="qa-icon">▶️</span> Start New Session</a>
+      {% if live_session %}
+        <a href="{{ url_for('faculty.session_view', session_id=live_session.id) }}" class="quick-action"><span class="qa-icon">⏹</span> Manage Live Session</a>
+      {% else %}
+        <span class="quick-action disabled"><span class="qa-icon">⏹</span> No Live Session</span>
+      {% endif %}
+      {% if sessions %}
+        <a href="{{ url_for('faculty.export_session_excel', session_id=sessions[0].id) }}" class="quick-action"><span class="qa-icon">📤</span> Export Latest (Excel)</a>
+        <a href="{{ url_for('faculty.export_session_pdf', session_id=sessions[0].id) }}" class="quick-action"><span class="qa-icon">📄</span> Export Latest (PDF)</a>
+      {% else %}
+        <span class="quick-action disabled"><span class="qa-icon">📤</span> Export Report</span>
+        <a href="{{ url_for('faculty.marks') }}" class="quick-action"><span class="qa-icon">📝</span> Upload Marks</a>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="grid-2">
+    <!-- ---------- Attendance analytics ---------- -->
+    <div class="card">
+      <h2>📈 Attendance Analytics — Today</h2>
+      {% set present = stats.present_today %}
+      {% set absent = stats.absent_today %}
+      {% set total = present + absent %}
+      {% set present_deg = (present / total * 360) if total else 0 %}
+      <div class="donut-wrap">
+        <div class="donut-inner">
+          <div class="donut" style="--donut-gradient: conic-gradient(var(--success) 0deg {{ present_deg }}deg, var(--error) {{ present_deg }}deg 360deg);"></div>
+          <div class="donut-center">{{ stats.attendance_percentage }}%</div>
+        </div>
+        <div class="donut-legend">
+          <div class="legend-row"><span class="legend-dot" style="background:var(--success);"></span> Present <span class="legend-val">{{ present }}</span></div>
+          <div class="legend-row"><span class="legend-dot" style="background:var(--error);"></span> Absent <span class="legend-val">{{ absent }}</span></div>
+          <div class="legend-row"><span class="legend-dot" style="background:var(--warn);"></span> Late <span class="legend-val">0</span></div>
+          <div class="legend-row"><span class="legend-dot" style="background:var(--secondary);"></span> Verified <span class="legend-val">{{ stats.verified_today }}/{{ present }}</span></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ---------- Recent activity ---------- -->
+    <div class="card">
+      <h2>📋 Recent Activities</h2>
+      {% if activities %}
+        <div class="activity-list">
+          {% for act in activities %}
+            <div class="activity-item type-{{ act.type }}">
+              <span class="activity-dot"></span>
+              <span class="activity-text">{{ act.text }}</span>
+              <span class="activity-time">{{ act.time.strftime('%H:%M') }}</span>
+            </div>
+          {% endfor %}
+        </div>
+      {% else %}
+        <div class="empty-state">No activity yet today.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- ---------- Today's schedule ---------- -->
+  <div class="card">
+    <h2>📚 Today's Schedule</h2>
+    {% if today_sessions %}
+      <div class="schedule-list">
+        {% for s in today_sessions %}
+          <div class="schedule-row">
+            <span class="schedule-time">{{ s.created_at.strftime('%H:%M') }}</span>
+            <div style="flex:1;">
+              <div class="schedule-subject">{{ s.subject }}</div>
+              <div class="schedule-meta">{{ s.class_section }}</div>
+            </div>
+            {% if s.is_active %}<span class="pill pill-live">LIVE</span>{% else %}<span class="pill pill-closed">CLOSED</span>{% endif %}
+          </div>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state">No lectures scheduled yet today. Start one below.</div>
+    {% endif %}
+  </div>
+
+  <h1 id="start-session-form" style="margin-top:8px;">Start a lecture</h1>
+  <p class="lede">Each lecture gets its own QR and geofence. Students must be physically within range to be marked present.</p>
+
+  <div class="grid-2">
+    <div class="card">
+      <h2>New session</h2>
+      <form method="POST" action="{{ url_for('faculty.start_session') }}" id="start-form">
+        <label for="subject">Subject</label>
+        <input type="text" id="subject" name="subject" placeholder="e.g. Network Security" required>
+
+        <label for="class_section">Class / section</label>
+        <input type="text" id="class_section" name="class_section" placeholder="e.g. MSc-CyberSec Sem 2" required>
+
+        <label for="radius">Geofence radius (meters)</label>
+        <input type="number" id="radius" name="radius" value="50" min="10" max="500">
+
+        <label for="duration">Session length (minutes)</label>
+        <input type="number" id="duration" name="duration" value="90" min="5" max="240">
+
+        <input type="hidden" name="latitude" id="latitude">
+        <input type="hidden" name="longitude" id="longitude">
+
+        <div id="loc-status" style="margin-top:14px; font-size:13px; color:var(--text-dim);">
+          Location not captured yet.
+        </div>
+
+        <button type="button" class="btn btn-secondary" style="margin-top:10px; width:100%;" onclick="captureLocation()">Capture my current location</button>
+        <button type="submit" class="btn btn-primary" id="submit-btn" disabled>Generate QR &amp; start</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Recent sessions</h2>
+      {% if sessions %}
+        <table>
+          <thead><tr><th>Subject</th><th>Class</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            {% for s in sessions %}
+              <tr>
+                <td>{{ s.subject }}</td>
+                <td>{{ s.class_section }}</td>
+                <td>
+                  {% if s.is_active %}<span class="pill pill-live">LIVE</span>
+                  {% else %}<span class="pill pill-closed">CLOSED</span>{% endif %}
+                </td>
+                <td><a href="{{ url_for('faculty.session_view', session_id=s.id) }}">Open →</a></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      {% else %}
+        <div class="empty-state">No sessions yet. Start your first lecture on the left.</div>
+      {% endif %}
+    </div>
+  </div>
+
+  <script>
+    function captureLocation() {
+      const status = document.getElementById('loc-status');
+      status.textContent = "Requesting location permission…";
+      if (!navigator.geolocation) {
+        status.textContent = "Geolocation not supported in this browser.";
+        return;
+      }
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          document.getElementById('latitude').value = pos.coords.latitude;
+          document.getElementById('longitude').value = pos.coords.longitude;
+          status.textContent = `Location captured (±${Math.round(pos.coords.accuracy)}m accuracy). Ready to start.`;
+          document.getElementById('submit-btn').disabled = false;
+        },
+        (err) => { status.textContent = "Could not get location: " + err.message; },
+        { enableHighAccuracy: true, timeout: 10000 }
+      );
+    }
+
+    const todayTag = document.getElementById('today-tag');
+    if (todayTag) {
+      todayTag.textContent = new Date().toLocaleDateString(undefined, {
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+      });
+    }
+  </script>
+{% endblock %}

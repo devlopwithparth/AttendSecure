@@ -1,0 +1,143 @@
+{% extends "base.html" %}
+{% block title %}Scan QR - AttendSecure{% endblock %}
+{% block content %}
+  <h1>Scan attendance QR</h1>
+  <p class="lede">Verify your selfie first, then point your camera at the QR your faculty is displaying. You must allow location access so the classroom geofence can be checked.</p>
+
+  <div class="card">
+    {% if has_profile_photo %}
+      <div id="selfie-step" class="selfie-panel">
+        <video id="selfie-video" autoplay playsinline></video>
+        <canvas id="selfie-canvas" width="480" height="360" hidden></canvas>
+        <button type="button" id="capture-selfie" class="btn btn-primary">Take selfie and verify</button>
+      </div>
+      <div id="reader" style="width:100%; max-width:420px; margin:0 auto; display:none;"></div>
+    {% else %}
+      <div class="empty-state">Your account does not have a registration photo. Please contact the administrator.</div>
+    {% endif %}
+    <div id="scan-status" class="scan-status"></div>
+  </div>
+
+  <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+  <script>
+    const statusEl = document.getElementById('scan-status');
+    const selfieStep = document.getElementById('selfie-step');
+    const selfieVideo = document.getElementById('selfie-video');
+    const selfieCanvas = document.getElementById('selfie-canvas');
+    const captureBtn = document.getElementById('capture-selfie');
+    const readerEl = document.getElementById('reader');
+    let processing = false;
+    let selfieStream = null;
+    let scanner = null;
+
+    function showStatus(message, ok) {
+      statusEl.textContent = message;
+      statusEl.className = 'scan-status show ' + (ok ? 'ok' : 'fail');
+    }
+
+    async function startSelfieCamera() {
+      if (!selfieVideo) return;
+      try {
+        selfieStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: false });
+        selfieVideo.srcObject = selfieStream;
+      } catch (err) {
+        showStatus('Could not access camera for selfie: ' + err.message, false);
+      }
+    }
+
+    function stopSelfieCamera() {
+      if (!selfieStream) return;
+      selfieStream.getTracks().forEach((track) => track.stop());
+      selfieStream = null;
+    }
+
+    async function verifySelfie() {
+      if (!selfieVideo || !selfieVideo.videoWidth) {
+        showStatus('Camera is still starting. Please try again.', false);
+        return;
+      }
+
+      captureBtn.disabled = true;
+      showStatus('Checking selfie against your registration photo...', true);
+
+      const ctx = selfieCanvas.getContext('2d');
+      selfieCanvas.width = selfieVideo.videoWidth;
+      selfieCanvas.height = selfieVideo.videoHeight;
+      ctx.drawImage(selfieVideo, 0, 0, selfieCanvas.width, selfieCanvas.height);
+      const selfie = selfieCanvas.toDataURL('image/jpeg', 0.88);
+
+      try {
+        const res = await fetch('/student/selfie/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ selfie }),
+        });
+        const data = await res.json();
+        showStatus(data.message, data.success);
+        if (data.success) {
+          stopSelfieCamera();
+          selfieStep.style.display = 'none';
+          readerEl.style.display = 'block';
+          startQrScanner();
+        } else {
+          captureBtn.disabled = false;
+        }
+      } catch (e) {
+        showStatus('Network error while verifying selfie.', false);
+        captureBtn.disabled = false;
+      }
+    }
+
+    function startQrScanner() {
+      scanner = new Html5Qrcode("reader");
+      scanner.start(
+        { facingMode: "environment" },
+        { fps: 10, qrbox: 250 },
+        onScanSuccess,
+        () => {}
+      ).catch((err) => {
+        showStatus('Could not access camera: ' + err, false);
+      });
+    }
+
+    async function onScanSuccess(decodedText) {
+      if (processing) return;
+      processing = true;
+      showStatus('QR read - getting your location...', true);
+
+      if (!navigator.geolocation) {
+        showStatus('Geolocation is not supported on this device.', false);
+        processing = false;
+        return;
+      }
+
+      navigator.geolocation.getCurrentPosition(async (pos) => {
+        try {
+          const res = await fetch('/student/scan/submit', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              token: decodedText,
+              latitude: pos.coords.latitude,
+              longitude: pos.coords.longitude,
+            }),
+          });
+          const data = await res.json();
+          showStatus(data.message, data.success);
+        } catch (e) {
+          showStatus('Network error while submitting attendance.', false);
+        } finally {
+          setTimeout(() => { processing = false; }, 3000);
+        }
+      }, (err) => {
+        showStatus('Location permission is required to mark attendance: ' + err.message, false);
+        processing = false;
+      }, { enableHighAccuracy: true, timeout: 10000 });
+    }
+
+    if (captureBtn) {
+      captureBtn.addEventListener('click', verifySelfie);
+      startSelfieCamera();
+    }
+  </script>
+{% endblock %}

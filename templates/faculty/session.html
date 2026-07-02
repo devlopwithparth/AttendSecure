@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+{% block title %}{{ lecture.subject }} — AttendSecure{% endblock %}
+{% block content %}
+  <h1>{{ lecture.subject }}</h1>
+  <p class="lede">{{ lecture.class_section }} ·
+    {% if lecture.is_active %}<span class="pill pill-live">LIVE</span>{% else %}<span class="pill pill-closed">CLOSED</span>{% endif %}
+    · Geofence: {{ lecture.radius_meters|int }}m
+  </p>
+
+  <div class="grid-2">
+    <div class="card" style="text-align:center;">
+      <h2 style="text-align:left;">Attendance QR</h2>
+      {% if lecture.is_active %}
+        <div class="qr-frame"><img id="qr-img" src="" alt="QR code"></div>
+        <div class="timer-ring" id="timer-text">refreshing…</div>
+        <form method="POST" action="{{ url_for('faculty.close_session', session_id=lecture.id) }}" style="margin-top:20px;">
+          <button type="submit" class="btn btn-danger">Close session</button>
+        </form>
+      {% else %}
+        <div class="empty-state">This session has been closed.</div>
+      {% endif %}
+    </div>
+
+    <div class="card">
+      <h2>Live attendance <span id="count-badge" style="color:var(--accent);"></span></h2>
+      <table id="att-table">
+        <thead><tr><th>Name</th><th>Roll No</th><th>Time</th><th>Dist.</th></tr></thead>
+        <tbody id="att-body">
+          <tr><td colspan="4" class="empty-state">No scans yet.</td></tr>
+        </tbody>
+      </table>
+      <div style="margin-top:16px; display:flex; gap:10px;">
+        <a class="btn btn-secondary" href="{{ url_for('faculty.export_session_excel', session_id=lecture.id) }}">Export Excel</a>
+        <a class="btn btn-secondary" href="{{ url_for('faculty.export_session_pdf', session_id=lecture.id) }}">Export PDF</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const sessionId = "{{ lecture.id }}";
+    const refreshSeconds = {{ qr_refresh_seconds }};
+    const isActive = {{ 'true' if lecture.is_active else 'false' }};
+
+    async function refreshQR() {
+      try {
+        const res = await fetch(`/faculty/session/${sessionId}/qr-token`);
+        if (!res.ok) return;
+        const data = await res.json();
+        document.getElementById('qr-img').src = data.image;
+        startCountdown(data.expires_in);
+      } catch (e) { /* silent */ }
+    }
+
+    function startCountdown(seconds) {
+      let remaining = seconds;
+      const el = document.getElementById('timer-text');
+      if (!el) return;
+      clearInterval(window._qrTimer);
+      window._qrTimer = setInterval(() => {
+        el.textContent = `refreshes in ${remaining}s`;
+        remaining -= 1;
+        if (remaining < 0) clearInterval(window._qrTimer);
+      }, 1000);
+    }
+
+    async function refreshAttendance() {
+      try {
+        const res = await fetch(`/faculty/session/${sessionId}/attendance-data`);
+        if (!res.ok) return;
+        const data = await res.json();
+        document.getElementById('count-badge').textContent = `(${data.count})`;
+        const body = document.getElementById('att-body');
+        if (data.records.length === 0) {
+          body.innerHTML = '<tr><td colspan="4" class="empty-state">No scans yet.</td></tr>';
+          return;
+        }
+        body.innerHTML = data.records.map(r =>
+          `<tr><td>${r.name}</td><td>${r.roll_no || ''}</td><td>${r.time}</td><td>${r.distance ?? ''}m</td></tr>`
+        ).join('');
+      } catch (e) { /* silent */ }
+    }
+
+    if (isActive) {
+      refreshQR();
+      setInterval(refreshQR, refreshSeconds * 1000);
+    }
+    refreshAttendance();
+    setInterval(refreshAttendance, 5000);
+  </script>
+{% endblock %}

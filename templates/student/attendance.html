@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}My Attendance — AttendSecure{% endblock %}
+{% block content %}
+  <h1>My attendance</h1>
+  <p class="lede">Attendance is grouped by subject based on your verified scans.</p>
+
+  <div class="card">
+    <h2>By subject</h2>
+    {% if subject_counts %}
+      <table>
+        <thead><tr><th>Subject</th><th>Lectures attended</th></tr></thead>
+        <tbody>
+          {% for subject, count in subject_counts.items() %}
+            <tr><td>{{ subject }}</td><td>{{ count }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="empty-state">No attendance recorded yet.</div>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <h2>Full history</h2>
+    {% if records %}
+      <table>
+        <thead><tr><th>Subject</th><th>Class</th><th>When</th></tr></thead>
+        <tbody>
+          {% for r in records %}
+            <tr>
+              <td>{{ r.session.subject }}</td>
+              <td>{{ r.session.class_section }}</td>
+              <td>{{ r.scanned_at.strftime('%d %b %Y, %H:%M') }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div style="margin-top:16px; display:flex; gap:10px;">
+        <a class="btn btn-secondary" href="{{ url_for('student.export_attendance_excel') }}">Export Excel</a>
+        <a class="btn btn-secondary" href="{{ url_for('student.export_attendance_pdf') }}">Export PDF</a>
+      </div>
+    {% else %}
+      <div class="empty-state">Nothing to show yet — scan a QR in class to get started.</div>
+    {% endif %}
+  </div>
+{% endblock %}

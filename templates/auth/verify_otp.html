@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Verify OTP — AttendSecure</title>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+  <div class="auth-shell">
+    <div class="auth-card">
+      <div class="auth-eyebrow">Step 2 of 2</div>
+      <h1>Enter your code</h1>
+      <p class="sub">We sent a 6-digit code to <strong>{{ email }}</strong>. It expires in a few minutes.</p>
+
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          <div class="flash-stack">
+            {% for category, message in messages %}
+              <div class="flash flash-{{ category }}">{{ message }}</div>
+            {% endfor %}
+          </div>
+        {% endif %}
+      {% endwith %}
+
+      <form method="POST" action="{{ url_for('auth.verify_otp_route') }}">
+        <label for="otp">One-time code</label>
+        <input type="text" id="otp" name="otp" data-otp="true" maxlength="6" inputmode="numeric" pattern="[0-9]*" required autofocus>
+
+        <button type="submit" class="btn btn-primary">Verify</button>
+      </form>
+
+      <form method="POST" action="{{ url_for('auth.resend_otp') }}" id="resend-form" style="margin-top:12px;">
+        <button type="submit" class="btn btn-secondary" style="width:100%;" id="resend-btn">Resend code</button>
+      </form>
+
+      <div class="form-footer"><a href="{{ url_for('auth.login') }}">Back to sign in</a></div>
+    </div>
+  </div>
+
+  <script>
+    // simple client-side cooldown so students/faculty don't spam resend
+    const cooldown = {{ cooldown }};
+    const btn = document.getElementById('resend-btn');
+    let remaining = cooldown;
+    function tick() {
+      if (remaining <= 0) {
+        btn.disabled = false;
+        btn.textContent = "Resend code";
+        return;
+      }
+      btn.disabled = true;
+      btn.textContent = `Resend code (${remaining}s)`;
+      remaining -= 1;
+      setTimeout(tick, 1000);
+    }
+    tick();
+  </script>
+</body>
+</html>

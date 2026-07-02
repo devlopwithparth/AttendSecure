@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block title %}Home — AttendSecure{% endblock %}
+{% block content %}
+  <h1>Welcome, {{ name }}</h1>
+  <p class="lede">Scan the QR your faculty displays in class to mark yourself present.</p>
+
+  <div class="grid-2">
+    <div class="stat">
+      <div class="num">{{ total_present }}</div>
+      <div class="label">Total lectures attended</div>
+    </div>
+    <div class="card" style="display:flex; align-items:center; justify-content:center;">
+      <a href="{{ url_for('student.scan') }}" class="btn btn-primary" style="width:auto; padding:14px 28px;">Scan QR now</a>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Recent attendance</h2>
+    {% if recent %}
+      <table>
+        <thead><tr><th>Subject</th><th>Class</th><th>When</th></tr></thead>
+        <tbody>
+          {% for r in recent %}
+            <tr>
+              <td>{{ r.session.subject }}</td>
+              <td>{{ r.session.class_section }}</td>
+              <td>{{ r.scanned_at.strftime('%d %b %Y, %H:%M') }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <div class="empty-state">No attendance recorded yet.</div>
+    {% endif %}
+  </div>
+{% endblock %}
