@@ -592,3 +592,21 @@ tr:last-child td { border-bottom: none; }
 @media (max-width: 400px) {
   .stats-grid { grid-template-columns: 1fr; }
 }
+
+/* ---------- Remember-me checkbox row ---------- */
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0 4px;
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-dim);
+}
+.checkbox-row input[type="checkbox"] {
+  width: auto;
+  margin: 0;
+  accent-color: var(--accent);
+  cursor: pointer;
+}
+.checkbox-row span { user-select: none; }
