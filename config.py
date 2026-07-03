@@ -41,3 +41,6 @@ class Config:
 
     # If True, OTPs are printed to console instead of emailed (useful for local dev/testing)
     OTP_DEV_MODE = os.environ.get("OTP_DEV_MODE", "true").lower() == "true"
+    # --- Resend (HTTPS email API, used as SMTP fallback/replacement on hosts that block SMTP ports) ---
+    RESEND_API_KEY = os.environ.get("RESEND_API_KEY", "")
+    RESEND_FROM_EMAIL = os.environ.get("RESEND_FROM_EMAIL", "onboarding@resend.dev")
