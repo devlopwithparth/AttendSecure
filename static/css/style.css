@@ -194,6 +194,30 @@ button:active, .btn:active { transform: scale(0.98); }
 }
 .topbar nav a.active, .topbar nav a:hover { color: var(--text); text-decoration: none; }
 
+.nav-profile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.nav-avatar-wrap { position: relative; width: 34px; height: 34px; flex-shrink: 0; }
+.nav-avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent);
+  background: var(--surface-raised);
+  display: block;
+}
+.nav-avatar-fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 13px;
+  color: var(--accent);
+}
+
 .topbar .user-tag {
   font-family: var(--font-mono);
   font-size: 12px;
