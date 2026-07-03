@@ -102,6 +102,7 @@ def login():
         session["pending_email"] = email
         session["pending_purpose"] = "login"
         session["pending_user_id"] = user.id
+        session["pending_remember"] = request.form.get("remember_me") == "on"
         flash("An OTP has been sent to your email to complete login.", "info")
         return redirect(url_for("auth.verify_otp_route"))
 
@@ -137,12 +138,17 @@ def verify_otp_route():
             return redirect(url_for("auth.login"))
 
         # purpose == login -> establish session, log device info
+        remember = session.pop("pending_remember", False)
         session["user_id"] = user.id
         session["role"] = user.role
         session["name"] = user.name
         session.pop("pending_email", None)
         session.pop("pending_purpose", None)
         session.pop("pending_user_id", None)
+
+        # "Remember me" checked -> session cookie lasts PERMANENT_SESSION_LIFETIME (30 days,
+        # rolling). Unchecked -> normal browser-session cookie that clears on browser close.
+        session.permanent = bool(remember)
 
         log = LoginLog(
             user_id=user.id,
