@@ -42,5 +42,5 @@ class Config:
     # If True, OTPs are printed to console instead of emailed (useful for local dev/testing)
     OTP_DEV_MODE = os.environ.get("OTP_DEV_MODE", "true").lower() == "true"
     # --- Resend (HTTPS email API, used as SMTP fallback/replacement on hosts that block SMTP ports) ---
-SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY", "")
-    SENDGRID_FROM_EMAIL = os.environ.get("SENDGRID_FROM_EMAIL", "")
+   SENDGRID_API_KEY = os.environ.get("SENDGRID_API_KEY", "")
+SENDGRID_FROM_EMAIL = os.environ.get("SENDGRID_FROM_EMAIL", "")
