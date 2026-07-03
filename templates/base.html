@@ -24,7 +24,18 @@
         {% endif %}
         <a href="{{ url_for('auth.logout') }}">Logout</a>
       </nav>
-      <span class="user-tag">{{ session.get('name', '') }}</span>
+      <div class="nav-profile">
+        {% if session.get('profile_photo') %}
+          <div class="nav-avatar-wrap">
+            <img class="nav-avatar" src="{{ url_for('static', filename=session.get('profile_photo')) }}" alt=""
+                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+            <div class="nav-avatar nav-avatar-fallback" style="display:none;">{{ session.get('name','?')[0]|upper }}</div>
+          </div>
+        {% else %}
+          <div class="nav-avatar nav-avatar-fallback">{{ session.get('name','?')[0]|upper if session.get('name') else '?' }}</div>
+        {% endif %}
+        <span class="user-tag">{{ session.get('name', '') }}</span>
+      </div>
     </div>
 
     <div class="page">
