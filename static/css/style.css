@@ -508,3 +508,87 @@ tr:last-child td { border-bottom: none; }
 .schedule-row .schedule-time { font-family: var(--font-mono); color: var(--accent); width: 64px; flex-shrink: 0; }
 .schedule-row .schedule-subject { font-weight: 600; }
 .schedule-row .schedule-meta { color: var(--text-dim); font-size: 12px; }
+
+/* ---------- Profile card (student dashboard) ---------- */
+.profile-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin: 8px 0 28px;
+}
+.profile-photo {
+  width: 96px;
+  height: 96px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid var(--accent);
+  background: var(--surface-raised);
+}
+.profile-photo-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-display);
+  font-size: 34px;
+  color: var(--accent);
+}
+.profile-name {
+  font-family: var(--font-display);
+  font-size: 18px;
+  color: var(--text);
+}
+
+/* ============================================================
+   Responsive layout — phones & small tablets
+   ============================================================ */
+@media (max-width: 720px) {
+  .topbar {
+    flex-wrap: wrap;
+    padding: 12px 16px;
+    row-gap: 10px;
+  }
+  .topbar .brand { font-size: 16px; }
+  .topbar nav {
+    order: 3;
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 14px;
+  }
+  .topbar nav a { margin-left: 0; font-size: 13px; }
+  .topbar .user-tag {
+    font-size: 11px;
+    max-width: 140px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .page {
+    padding: 20px 16px 56px;
+  }
+  .page h1 { font-size: 21px; }
+
+  .card { padding: 16px; }
+  .card h2 { font-size: 15px; }
+
+  table { font-size: 12px; }
+  th, td { padding: 8px 6px !important; }
+
+  .profile-photo { width: 76px; height: 76px; }
+  .profile-photo-placeholder { font-size: 26px; }
+
+  .quick-actions { grid-template-columns: 1fr; }
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stat-card { padding: 14px; }
+  .stat-card .stat-num { font-size: 21px; }
+
+  .donut-wrap { flex-direction: column; align-items: flex-start; }
+
+  .schedule-row { flex-wrap: wrap; }
+}
+
+@media (max-width: 400px) {
+  .stats-grid { grid-template-columns: 1fr; }
+}
