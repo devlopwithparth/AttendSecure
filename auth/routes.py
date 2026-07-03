@@ -141,7 +141,8 @@ def verify_otp_route():
         remember = session.pop("pending_remember", False)
         session["user_id"] = user.id
         session["role"] = user.role
-        session["name"] = user.name
+        session["name"] = user.name 
+        session["profile_photo"] = user.profile_photo
         session.pop("pending_email", None)
         session.pop("pending_purpose", None)
         session.pop("pending_user_id", None)
