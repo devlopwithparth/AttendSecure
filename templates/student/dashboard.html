@@ -1,6 +1,15 @@
 {% extends "base.html" %}
 {% block title %}Home — AttendSecure{% endblock %}
 {% block content %}
+  <div class="profile-card">
+    {% if profile_photo %}
+      <img class="profile-photo" src="{{ url_for('static', filename=profile_photo) }}" alt="{{ name }}">
+    {% else %}
+      <div class="profile-photo profile-photo-placeholder">{{ name[0]|upper if name else '?' }}</div>
+    {% endif %}
+    <div class="profile-name">{{ name }}</div>
+  </div>
+
   <h1>Welcome, {{ name }}</h1>
   <p class="lede">Scan the QR your faculty displays in class to mark yourself present.</p>
 
